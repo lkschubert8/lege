@@ -35,3 +35,11 @@
           (if (is-error result-b)
             result-b
             (update result-b :result (fn [x] [(:result result-a) x]))))))))
+
+(defn or-else
+  [parser-a parser-b]
+  (fn [sequence]
+    (let [result-a (parser-a sequence)]
+      (if (is-error result-a)
+        (parser-b sequence)
+        result-a))))

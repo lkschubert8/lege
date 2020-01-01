@@ -27,4 +27,14 @@
           [\x \c])
          {:error "Expecting 'y' found 'c'"}))))
 
+(deftest test-or-else-combinator
+  (testing "Or else combinator"
+    (is (= 
+         ((lege/or-else
+           (lege/parse-char \x)
+           (lege/parse-char \y))
+          [\y])
+         {:sequence []
+          :result \y}))))
+
 
