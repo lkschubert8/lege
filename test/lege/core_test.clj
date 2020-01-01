@@ -9,4 +9,22 @@
   (testing "character parser expected failure"
     (is (= ((lege/parse-char \y) [\x])  {:error "Expecting 'y' found 'x'"}))))
 
+(deftest test-and-then-combinator
+  (testing "And then combinator"
+    (is (=
+         ((lege/and-then
+           (lege/parse-char \x)
+           (lege/parse-char \y))
+          [\x \y])
+         {:sequence []
+          :result [\x \y]}
+         )))
+  (testing "And then failure"
+    (is (=
+         ((lege/and-then
+           (lege/parse-char \x)
+           (lege/parse-char \y))
+          [\x \c])
+         {:error "Expecting 'y' found 'c'"}))))
+
 

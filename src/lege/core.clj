@@ -17,10 +17,21 @@
   (contains? parser-result :error))
 
 (defn parse-char 
-  ([character]
+  [character]
   (fn [sequence] 
     (let [current-value (first sequence)]
     (if (= current-value character)
       (build-success (rest sequence) (first sequence))
       (build-error (str "Expecting '" character "' found '" (first sequence) "'")) ;; TODO figure out error handling/threading through parsers 
-      )))))
+      ))))
+
+(defn and-then
+  [parser-a parser-b]
+  (fn [sequence]
+    (let [result-a (parser-a sequence)]
+      (if (is-error result-a)
+        result-a
+        (let [result-b (-> result-a :sequence parser-b)]
+          (if (is-error result-b)
+            result-b
+            (update result-b :result (fn [x] [(:result result-a) x]))))))))
