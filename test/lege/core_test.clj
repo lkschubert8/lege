@@ -17,8 +17,7 @@
            (lege/parse-char \y))
           [\x \y])
          {:sequence []
-          :result [\x \y]}
-         )))
+          :result [\x \y]})))
   (testing "And then failure"
     (is (=
          ((lege/and-then
@@ -29,7 +28,7 @@
 
 (deftest test-or-else-combinator
   (testing "Or else combinator"
-    (is (= 
+    (is (=
          ((lege/or-else
            (lege/parse-char \x)
            (lege/parse-char \y))
@@ -37,4 +36,21 @@
          {:sequence []
           :result \y}))))
 
+(deftest any-of-combinator
+  (testing "Any of combinator"
+    (is (=
+         ((lege/any-of [\x \y]) [\y])
+         {:sequence []
+          :result \y}))))
+
+(deftest map-parser
+  (testing "implementing 3 char alpha parser"
+    (let [lower-case-parser (lege/any-of (lege/char-range \a \z))]
+      (is (=
+           ((lege/map-parser #(apply str (flatten %)) 
+                            (lege/and-then lower-case-parser (lege/and-then lower-case-parser lower-case-parser)))
+
+                            [\t \h \e])
+           {:sequence []
+            :result "the"})))))
 

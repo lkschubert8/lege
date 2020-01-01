@@ -16,6 +16,10 @@
   [parser-result]
   (contains? parser-result :error))
 
+
+(defn char-range [start end]
+  (map char (range (int start) (inc (int end)))))
+
 (defn parse-char 
   [character]
   (fn [sequence] 
@@ -43,3 +47,21 @@
       (if (is-error result-a)
         (parser-b sequence)
         result-a))))
+
+(defn choice 
+  [parsers]
+  (fn [sequence]
+    ((reduce or-else parsers) sequence)))
+
+(defn any-of
+  [characters]
+  (choice (map parse-char characters)))
+
+(defn map-parser
+  [map-fn parser]
+  (fn [sequence]
+    (let [result (parser sequence)]
+      (if (is-error result)
+        result
+        (update result :result map-fn)))))
+
