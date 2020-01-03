@@ -103,8 +103,53 @@
         (build-success sequence [])
         (let [{vals :result
                rest :sequence} ((parse-zero-or-more parser) (:sequence result))]
-          (build-success rest (cons (:result result) vals) ))))))
+          (build-success rest (cons (:result result) vals)))))))
 
 (defn parse-many
   [parser]
   (parse-zero-or-more parser))
+
+(defn parse-many-1
+  [parser]
+  (fn 
+    [sequence]
+    (let [result (parser sequence)]
+      (if (is-error result)
+        result
+        (let [{vals :result
+               rest :sequence} ((parse-zero-or-more parser) (:sequence result))]
+          (build-success rest (cons (:result result) vals)))))))
+
+(defn parse-opt 
+  [parser]
+  (or-else parser
+           (return-parser nil)))
+
+(defn and-then-ignore-left
+  [parser-a parser-b]
+  (map-parser second (and-then parser-a parser-b)))
+
+(defn and-then-ignore-right
+  [parser-a parser-b]
+  (map-parser first (and-then parser-a parser-b)))
+
+(defn parse-between 
+  [parser-a parser-b parser-c]
+  (and-then-ignore-right (and-then-ignore-left parser-a parser-b) parser-c))
+
+(defn parse-sep-by-1
+  [parser separator-parser]
+  (let [separator-then-parser (and-then-ignore-left separator-parser parser)]
+    (map-parser #(cons (first %) (second %)) (and-then parser (parse-many separator-then-parser)))))
+
+(defn parse-sep-by
+  [parser separator-parser]
+  (or-else (parse-sep-by-1 parser separator-parser) (return-parser [])))
+
+(defn parse-bind
+  [f parser]
+  (fn [sequence]
+    (let [result-a (parser sequence)]
+      (if (is-error result-a)
+        result-a
+        ((-> result-a :result f) sequence)))))

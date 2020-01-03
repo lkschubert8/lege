@@ -47,21 +47,20 @@
   (testing "implementing 3 char alpha parser"
     (let [lower-case-parser (lege/any-of (lege/char-range \a \z))]
       (is (=
-           ((lege/map-parser #(apply str (flatten %)) 
-                            (lege/and-then lower-case-parser (lege/and-then lower-case-parser lower-case-parser)))
+           ((lege/map-parser #(apply str (flatten %))
+                             (lege/and-then lower-case-parser (lege/and-then lower-case-parser lower-case-parser)))
 
-                            [\t \h \e])
+            [\t \h \e])
            {:sequence []
             :result "the"})))))
 
 
 (deftest seq-parser
   (testing "testing a an ABC parser with sequence"
-    (is (= ((lege/sequence-parser 
+    (is (= ((lege/sequence-parser
              [(lege/parse-val \A)
               (lege/parse-val \B)
-              (lege/parse-val \C)
-              ])[\A \B \C \D])
+              (lege/parse-val \C)]) [\A \B \C \D])
            {:sequence [\D]
             :result '(\A \B \C)}))))
 
@@ -71,8 +70,33 @@
            {:sequence [\D]
             :result "ABC"}))))
 
-(deftest many-parser 
+(deftest many-parser
   (testing "Testing many A's"
     (is (= ((lege/parse-many (lege/parse-val \A)) [\A \A \A])
            {:sequence []
-            :result [\A \A \A]}))))
+            :result [\A \A \A]})))
+  (testing "Testing no A's"
+    (is (= ((lege/parse-many (lege/parse-val \A)) [\B \A \A])
+           {:sequence [\B \A \A]
+            :result []}))))
+
+(deftest many-1-parser
+  (testing "Testing many A's"
+    (is (= ((lege/parse-many-1 (lege/parse-val \A)) [\A \A \A])
+           {:sequence []
+            :result [\A \A \A]})))
+  (testing "Testing no A's"
+    (is (= ((lege/parse-many-1 (lege/parse-val \A)) [\B \A \A])
+           {:error "Expecting 'A' found 'B'"}))))
+
+
+
+
+(deftest sep-by-parsers
+  (testing "Sep By many passes"
+    (is (= ((lege/parse-sep-by (lege/parse-val \a) (lege/parse-val \,))
+            (seq "a,a,a,a"))
+           {:result [\a\a\a\a]
+            :sequence []}))))
+
+
