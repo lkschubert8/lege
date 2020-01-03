@@ -5,24 +5,24 @@
 
 (deftest test-basic-char-parser
   (testing "character parser"
-    (is (= ((lege/parse-char \x) [\x]) {:sequence [] :result \x})))
+    (is (= ((lege/parse-val \x) [\x]) {:sequence [] :result \x})))
   (testing "character parser expected failure"
-    (is (= ((lege/parse-char \y) [\x])  {:error "Expecting 'y' found 'x'"}))))
+    (is (= ((lege/parse-val \y) [\x])  {:error "Expecting 'y' found 'x'"}))))
 
 (deftest test-and-then-combinator
   (testing "And then combinator"
     (is (=
          ((lege/and-then
-           (lege/parse-char \x)
-           (lege/parse-char \y))
+           (lege/parse-val \x)
+           (lege/parse-val \y))
           [\x \y])
          {:sequence []
           :result [\x \y]})))
   (testing "And then failure"
     (is (=
          ((lege/and-then
-           (lege/parse-char \x)
-           (lege/parse-char \y))
+           (lege/parse-val \x)
+           (lege/parse-val \y))
           [\x \c])
          {:error "Expecting 'y' found 'c'"}))))
 
@@ -30,8 +30,8 @@
   (testing "Or else combinator"
     (is (=
          ((lege/or-else
-           (lege/parse-char \x)
-           (lege/parse-char \y))
+           (lege/parse-val \x)
+           (lege/parse-val \y))
           [\y])
          {:sequence []
           :result \y}))))
@@ -58,9 +58,21 @@
 (deftest seq-parser
   (testing "testing a an ABC parser with sequence"
     (is (= ((lege/sequence-parser 
-             [(lege/parse-char \A)
-              (lege/parse-char \B)
-              (lege/parse-char \C)
+             [(lege/parse-val \A)
+              (lege/parse-val \B)
+              (lege/parse-val \C)
               ])[\A \B \C \D])
            {:sequence [\D]
             :result '(\A \B \C)}))))
+
+(deftest string-parser
+  (testing "Testing string parsing"
+    (is (= ((lege/parse-string "ABC") [\A \B \C \D])
+           {:sequence [\D]
+            :result "ABC"}))))
+
+(deftest many-parser 
+  (testing "Testing many A's"
+    (is (= ((lege/parse-many (lege/parse-val \A)) [\A \A \A])
+           {:sequence []
+            :result [\A \A \A]}))))

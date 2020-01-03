@@ -21,13 +21,13 @@
 (defn char-range [start end]
   (map char (range (int start) (inc (int end)))))
 
-(defn parse-char
-  [character]
+(defn parse-val
+  [val]
   (fn [sequence]
     (let [current-value (first sequence)]
-      (if (= current-value character)
+      (if (= current-value val)
         (build-success (rest sequence) (first sequence))
-        (build-error (str "Expecting '" character "' found '" (first sequence) "'")) ;; TODO figure out error handling/threading through parsers 
+        (build-error (str "Expecting '" val "' found '" (first sequence) "'")) ;; TODO figure out error handling/threading through parsers 
         ))))
 
 (defn and-then
@@ -55,8 +55,8 @@
     ((reduce or-else parsers) sequence)))
 
 (defn any-of
-  [characters]
-  (choice (map parse-char characters)))
+  [vals]
+  (choice (map parse-val vals)))
 
 (defn map-parser
   [map-fn parser]
@@ -88,3 +88,23 @@
       (return-parser [])
       (cons-parser (first parsers) (sequence-parser (rest parsers))))))
 
+(defn parse-string
+  [string]
+  (fn
+    [sequence]
+    ((map-parser #(apply str %) (sequence-parser (map parse-val (seq string)))) sequence)))
+
+(defn- parse-zero-or-more
+  [parser]
+  (fn
+    [sequence]
+    (let [result (parser sequence)]
+      (if (is-error result)
+        (build-success sequence [])
+        (let [{vals :result
+               rest :sequence} ((parse-zero-or-more parser) (:sequence result))]
+          (build-success rest (cons (:result result) vals) ))))))
+
+(defn parse-many
+  [parser]
+  (parse-zero-or-more parser))
