@@ -54,3 +54,13 @@
            {:sequence []
             :result "the"})))))
 
+
+(deftest seq-parser
+  (testing "testing a an ABC parser with sequence"
+    (is (= ((lege/sequence-parser 
+             [(lege/parse-char \A)
+              (lege/parse-char \B)
+              (lege/parse-char \C)
+              ])[\A \B \C \D])
+           {:sequence [\D]
+            :result '(\A \B \C)}))))

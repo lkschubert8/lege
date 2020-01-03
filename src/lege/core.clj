@@ -1,4 +1,5 @@
-(ns lege.core)
+(ns lege.core
+  (:require [clojure.tools.logging :as log]))
 
 ;;For starters I want to be able to parse a single specified char, multiple chars
 ;;wildcard characters, sequences and between
@@ -20,14 +21,14 @@
 (defn char-range [start end]
   (map char (range (int start) (inc (int end)))))
 
-(defn parse-char 
+(defn parse-char
   [character]
-  (fn [sequence] 
+  (fn [sequence]
     (let [current-value (first sequence)]
-    (if (= current-value character)
-      (build-success (rest sequence) (first sequence))
-      (build-error (str "Expecting '" character "' found '" (first sequence) "'")) ;; TODO figure out error handling/threading through parsers 
-      ))))
+      (if (= current-value character)
+        (build-success (rest sequence) (first sequence))
+        (build-error (str "Expecting '" character "' found '" (first sequence) "'")) ;; TODO figure out error handling/threading through parsers 
+        ))))
 
 (defn and-then
   [parser-a parser-b]
@@ -48,7 +49,7 @@
         (parser-b sequence)
         result-a))))
 
-(defn choice 
+(defn choice
   [parsers]
   (fn [sequence]
     ((reduce or-else parsers) sequence)))
@@ -64,4 +65,26 @@
       (if (is-error result)
         result
         (update result :result map-fn)))))
+
+(defn return-parser
+  [input]
+  (fn [sequence] (build-success sequence input)))
+
+(defn apply-parser ; TODO spend more time grokking this
+  [fp xp]
+  (map-parser #((first %) (second %)) (and-then fp xp)))
+
+
+
+(defn- lift2
+  [f]
+  (fn [xp yp]
+    (apply-parser (apply-parser (return-parser f) xp) yp)))
+
+(defn sequence-parser
+  [parsers]
+  (let [cons-parser (lift2 #(partial cons %))]
+    (if (= 0 (count parsers))
+      (return-parser [])
+      (cons-parser (first parsers) (sequence-parser (rest parsers))))))
 
