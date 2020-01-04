@@ -5,9 +5,9 @@
 
 (deftest test-basic-char-parser
   (testing "character parser"
-    (is (= ((lege/parse-val \x) [\x]) {:sequence [] :result \x})))
+    (is (= ((lege/parse-val \x) [\x]) {:lege/sequence [] :lege/result \x})))
   (testing "character parser expected failure"
-    (is (= ((lege/parse-val \y) [\x])  {:error "Expecting 'y' found 'x'"}))))
+    (is (= ((lege/parse-val \y) [\x])  {:lege/error "Expecting 'y' found 'x'"}))))
 
 (deftest test-and-then-combinator
   (testing "And then combinator"
@@ -16,15 +16,15 @@
            (lege/parse-val \x)
            (lege/parse-val \y))
           [\x \y])
-         {:sequence []
-          :result [\x \y]})))
+         {:lege/sequence []
+          :lege/result [\x \y]})))
   (testing "And then failure"
     (is (=
          ((lege/and-then
            (lege/parse-val \x)
            (lege/parse-val \y))
           [\x \c])
-         {:error "Expecting 'y' found 'c'"}))))
+         {:lege/error "Expecting 'y' found 'c'"}))))
 
 (deftest test-or-else-combinator
   (testing "Or else combinator"
@@ -33,15 +33,15 @@
            (lege/parse-val \x)
            (lege/parse-val \y))
           [\y])
-         {:sequence []
-          :result \y}))))
+         {:lege/sequence []
+          :lege/result \y}))))
 
 (deftest any-of-combinator
   (testing "Any of combinator"
     (is (=
          ((lege/any-of [\x \y]) [\y])
-         {:sequence []
-          :result \y}))))
+         {:lege/sequence []
+          :lege/result \y}))))
 
 (deftest map-parser
   (testing "implementing 3 char alpha parser"
@@ -51,8 +51,8 @@
                              (lege/and-then lower-case-parser (lege/and-then lower-case-parser lower-case-parser)))
 
             [\t \h \e])
-           {:sequence []
-            :result "the"})))))
+           {:lege/sequence []
+            :lege/result "the"})))))
 
 
 (deftest seq-parser
@@ -61,33 +61,33 @@
              [(lege/parse-val \A)
               (lege/parse-val \B)
               (lege/parse-val \C)]) [\A \B \C \D])
-           {:sequence [\D]
-            :result '(\A \B \C)}))))
+           {:lege/sequence [\D]
+            :lege/result '(\A \B \C)}))))
 
 (deftest string-parser
   (testing "Testing string parsing"
     (is (= ((lege/parse-string "ABC") [\A \B \C \D])
-           {:sequence [\D]
-            :result "ABC"}))))
+           {:lege/sequence [\D]
+            :lege/result "ABC"}))))
 
 (deftest many-parser
   (testing "Testing many A's"
     (is (= ((lege/parse-many (lege/parse-val \A)) [\A \A \A])
-           {:sequence []
-            :result [\A \A \A]})))
+           {:lege/sequence []
+            :lege/result [\A \A \A]})))
   (testing "Testing no A's"
     (is (= ((lege/parse-many (lege/parse-val \A)) [\B \A \A])
-           {:sequence [\B \A \A]
-            :result []}))))
+           {:lege/sequence [\B \A \A]
+            :lege/result []}))))
 
 (deftest many-1-parser
   (testing "Testing many A's"
     (is (= ((lege/parse-many-1 (lege/parse-val \A)) [\A \A \A])
-           {:sequence []
-            :result [\A \A \A]})))
+           {:lege/sequence []
+            :lege/result [\A \A \A]})))
   (testing "Testing no A's"
     (is (= ((lege/parse-many-1 (lege/parse-val \A)) [\B \A \A])
-           {:error "Expecting 'A' found 'B'"}))))
+           {:lege/error "Expecting 'A' found 'B'"}))))
 
 
 
@@ -96,7 +96,7 @@
   (testing "Sep By many passes"
     (is (= ((lege/parse-sep-by (lege/parse-val \a) (lege/parse-val \,))
             (seq "a,a,a,a"))
-           {:result [\a\a\a\a]
-            :sequence []}))))
+           {:lege/result [\a\a\a\a]
+            :lege/sequence []}))))
 
 

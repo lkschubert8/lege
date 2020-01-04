@@ -18,16 +18,16 @@
   [message string?]
   {:lege/error message})
 
-(defn-spec ^:private is-error boolean?
+(defn-spec is-error boolean?
   [parser-result :lege/parser-output]
-  (contains? parser-result :error))
+  (contains? parser-result :lege/error))
 
 
 (defn-spec char-range (s/* char?)
   [start char? end char?]
   (map char (range (int start) (inc (int end)))))
 
-(defn-spec parse-val any?
+(defn-spec parse-val :lege/parser
   [val any?]
   (fn [sequence]
     (let [current-value (first sequence)]
@@ -35,7 +35,6 @@
         (build-success (rest sequence) (first sequence))
         (build-error (str "Expecting '" val "' found '" (first sequence) "'")) ;; TODO figure out error handling/threading through parsers 
         ))))
-
 
 (defn-spec and-then :lege/parser
   [parser-a :lege/parser parser-b :lege/parser]
@@ -71,7 +70,7 @@
     (let [result (parser sequence)]
       (if (is-error result)
         result
-        (update result :result map-fn)))))
+        (update result :lege/result map-fn)))))
 
 (defn return-parser
   [input]
@@ -108,9 +107,9 @@
     (let [result (parser sequence)]
       (if (is-error result)
         (build-success sequence [])
-        (let [{vals :result
-               rest :sequence} ((parse-zero-or-more parser) (:sequence result))]
-          (build-success rest (cons (:result result) vals)))))))
+        (let [{vals :lege/result
+               rest :lege/sequence} ((parse-zero-or-more parser) (:lege/sequence result))]
+          (build-success rest (cons (:lege/result result) vals)))))))
 
 (defn parse-many
   [parser]
@@ -123,9 +122,9 @@
     (let [result (parser sequence)]
       (if (is-error result)
         result
-        (let [{vals :result
-               rest :sequence} ((parse-zero-or-more parser) (:sequence result))]
-          (build-success rest (cons (:result result) vals)))))))
+        (let [{vals :lege/result
+               rest :lege/sequence} ((parse-zero-or-more parser) (:lege/sequence result))]
+          (build-success rest (cons (:lege/result result) vals)))))))
 
 (defn parse-opt
   [parser]
@@ -159,6 +158,6 @@
     (let [result-a (parser sequence)]
       (if (is-error result-a)
         result-a
-        ((-> result-a :result f) sequence)))))
+        ((-> result-a :lege/result f) sequence)))))
 
 (st/instrument)
