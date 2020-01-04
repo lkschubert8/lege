@@ -19,7 +19,7 @@
          utils/string->int)
       (lege/parse-many-1 (lege/any-of (lege/char-range \0 \9)))))) sequence))
 
-(defn parse-string
+(defn parse-string ; TODO support escape characters
   "Parses a traditional double quote surrounded string, only supports ASCII for
    now and doesn't support escape characters at this time"
   [sequence]

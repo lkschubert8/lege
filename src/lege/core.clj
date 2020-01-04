@@ -1,28 +1,34 @@
 (ns lege.core
-  (:require [clojure.tools.logging :as log]))
+  (:require
+   [lege.specs :as specs]
+   [clojure.tools.logging :as log]
+   [clojure.spec.alpha :as s]
+   [orchestra.core :refer [defn-spec]]
+   [orchestra.spec.test :as st]))
 
 ;;For starters I want to be able to parse a single specified char, multiple chars
 ;;wildcard characters, sequences and between
 
-(defn- build-success
-  [sequence result]
-  {:sequence sequence
-   :result result})
+(defn-spec build-success :lege/parser-success
+  [sequence :lege/sequence result :lege/result]
+  {:lege/sequence sequence
+   :lege/result result})
 
-(defn- build-error
-  [message]
-  {:error message})
+(defn-spec build-error :lege/parser-error
+  [message string?]
+  {:lege/error message})
 
-(defn- is-error
-  [parser-result]
+(defn-spec ^:private is-error boolean?
+  [parser-result :lege/parser-output]
   (contains? parser-result :error))
 
 
-(defn char-range [start end]
+(defn-spec char-range (s/* char?)
+  [start char? end char?]
   (map char (range (int start) (inc (int end)))))
 
-(defn parse-val
-  [val]
+(defn-spec parse-val any?
+  [val any?]
   (fn [sequence]
     (let [current-value (first sequence)]
       (if (= current-value val)
@@ -30,19 +36,20 @@
         (build-error (str "Expecting '" val "' found '" (first sequence) "'")) ;; TODO figure out error handling/threading through parsers 
         ))))
 
-(defn and-then
-  [parser-a parser-b]
+
+(defn-spec and-then :lege/parser
+  [parser-a :lege/parser parser-b :lege/parser]
   (fn [sequence]
     (let [result-a (parser-a sequence)]
       (if (is-error result-a)
         result-a
-        (let [result-b (-> result-a :sequence parser-b)]
+        (let [result-b (-> result-a :lege/sequence parser-b)]
           (if (is-error result-b)
             result-b
-            (update result-b :result (fn [x] [(:result result-a) x]))))))))
+            (update result-b :lege/result (fn [x] [(:lege/result result-a) x]))))))))
 
-(defn or-else
-  [parser-a parser-b]
+(defn-spec or-else :lege/parser
+  [parser-a :lege/parser parser-b :lege/parser]
   (fn [sequence]
     (let [result-a (parser-a sequence)]
       (if (is-error result-a)
@@ -111,7 +118,7 @@
 
 (defn parse-many-1
   [parser]
-  (fn 
+  (fn
     [sequence]
     (let [result (parser sequence)]
       (if (is-error result)
@@ -120,7 +127,7 @@
                rest :sequence} ((parse-zero-or-more parser) (:sequence result))]
           (build-success rest (cons (:result result) vals)))))))
 
-(defn parse-opt 
+(defn parse-opt
   [parser]
   (or-else parser
            (return-parser nil)))
@@ -133,7 +140,7 @@
   [parser-a parser-b]
   (map-parser first (and-then parser-a parser-b)))
 
-(defn parse-between 
+(defn parse-between
   [parser-a parser-b parser-c]
   (and-then-ignore-right (and-then-ignore-left parser-a parser-b) parser-c))
 
@@ -153,3 +160,5 @@
       (if (is-error result-a)
         result-a
         ((-> result-a :result f) sequence)))))
+
+(st/instrument)
