@@ -88,7 +88,7 @@
       (return-parser [])
       (cons-parser (first parsers) (sequence-parser (rest parsers))))))
 
-(defn parse-string
+(defn parse-string ;; TODO This still assume seq of chars 
   [string]
   (fn
     [sequence]
