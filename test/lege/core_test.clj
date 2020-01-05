@@ -66,7 +66,7 @@
 
 (deftest string-parser
   (testing "Testing string parsing"
-    (is (= ((lege/parse-string "ABC") [\A \B \C \D])
+    (is (= ((lege/string-parser "ABC") [\A \B \C \D])
            {:lege/sequence [\D]
             :lege/result "ABC"}))))
 

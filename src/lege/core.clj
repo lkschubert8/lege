@@ -94,7 +94,7 @@
       (return-parser [])
       (cons-parser (first parsers) (sequence-parser (rest parsers))))))
 
-(defn-spec parse-string :lege/parser ;; TODO This still assume seq of chars 
+(defn-spec string-parser :lege/parser ;; TODO This still assume seq of chars 
   [string string?]
   (fn
     [sequence]
