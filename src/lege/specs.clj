@@ -4,6 +4,7 @@
 (s/def :lege/error string?)
 (s/def :lege/result any?)
 (s/def :lege/sequence sequential?)
+(s/def :lege/char-sequence (s/* char?))
 
 (s/def :lege/parser-error (s/keys :req [:lege/error]))
 (s/def :lege/parser-success (s/keys :req [:lege/result :lege/sequence]))
